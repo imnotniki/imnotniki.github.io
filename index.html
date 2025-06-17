@@ -1,353 +1,236 @@
-<!DOCTYPE html>
-<html lang="en">
+<html ng-app="custom-webapp-ui" lang="en" style="background-color: white">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCC Mining</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            font-family: sans-serif;
             text-align: center;
+            padding: 20px;
         }
-
         .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             max-width: 400px;
-            width: 90%;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #f9f9f9;
         }
-
-        h1 {
-            color: #00ff9d;
-            margin-bottom: 30px;
-            font-size: 24px;
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-
-        .mining-container {
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .mining-circle-container {
             position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 30px;
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
         }
-
-        .progress-circle {
+        .mining-circle {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: conic-gradient(#00ff9d 0%, #00ff9d 0%, #2d3748 0%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: background 0.5s ease;
-            box-shadow: 0 0 30px rgba(0, 255, 157, 0.2);
+            border: 8px solid #eee;
+            border-top: 8px solid #4CAF50; /* Green for progress */
+            transform: rotate(-45deg); /* Start from top-left */
+            transition: border-top-color 0.5s ease-in-out;
         }
-
-        .progress-inner {
-            width: 85%;
-            height: 85%;
-            background: #1a1a2e;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            font-size: 14px;
-        }
-
-        .balance {
-            font-size: 24px;
+        .mining-balance {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
             font-weight: bold;
-            margin-bottom: 5px;
-            color: #00ff9d;
+            color: #333;
         }
-
-        .time-remaining {
-            font-size: 12px;
-            opacity: 0.8;
+        .mining-status-text {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #555;
         }
-
-        .mining-button {
-            background: linear-gradient(45deg, #00ff9d, #00bcd4);
-            border: none;
-            color: #1a1a2e;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.3);
-            margin-top: 20px;
-        }
-
-        .mining-button:disabled {
-            background: #4a5568;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .mining-button:not(:disabled):hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 255, 157, 0.4);
-        }
-
-        .mining-button:not(:disabled):active {
-            transform: translateY(1px);
-        }
-
-        .status-message {
-            margin-top: 20px;
-            min-height: 24px;
-            color: #ff6b6b;
-            font-size: 14px;
-        }
-
-        .account-input {
+        table {
             width: 100%;
-            padding: 12px 15px;
-            margin: 15px 0;
-            border: 1px solid #4a5568;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            font-size: 14px;
-            box-sizing: border-box;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-
-        .account-input:focus {
-            outline: none;
-            border-color: #00ff9d;
-            box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2);
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
-
-        .hidden {
-            display: none;
+        th {
+            background-color: #f2f2f2;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1>CCC Mining</h1>
-
-        <div class="mining-container">
-            <div class="progress-circle" id="progressCircle">
-                <div class="progress-inner">
-                    <div class="balance" id="balance">0.0000</div>
-                    <div>CCC</div>
-                    <div class="time-remaining" id="timeRemaining">Ready to mine!</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="accountInputContainer">
-            <input type="text"
-                   id="hederaAccount"
-                   class="account-input"
-                   placeholder="Enter your Hedera Account ID (0.0.123456)"
-                   pattern="0\.0\.\d{1,10}">
-        </div>
-
-        <button id="mineButton" class="mining-button">MINE</button>
-
-        <div class="status-message" id="statusMessage"></div>
-    </div>
-
     <script>
-        // Initialize Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.enableClosingConfirmation();
+        angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope, $interval) {
+            const WebApp = window.Telegram.WebApp;
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialData = JSON.parse(urlParams.get('data'));
 
-        // DOM Elements
-        const mineButton = document.getElementById('mineButton');
-        const progressCircle = document.getElementById('progressCircle');
-        const balanceElement = document.getElementById('balance');
-        const timeRemainingElement = document.getElementById('timeRemaining');
-        const statusMessage = document.getElementById('statusMessage');
-        const hederaAccountInput = document.getElementById('hederaAccount');
-        const accountInputContainer = document.getElementById('accountInputContainer');
+            $scope.userId = initialData.userId;
+            $scope.username = initialData.username;
+            $scope.hederaAccountId = initialData.hederaAccountId;
+            $scope.cccTokens = initialData.cccTokens;
+            $scope.miningSessionStart = initialData.miningSessionStart;
+            $scope.miningDuration = initialData.miningDuration; // 100 minutes in seconds
 
-        // State
-        let mining = false;
-        let countdownInterval = null;
-        let remainingSeconds = 0;
-        const COOLDOWN_SECONDS = 6000; // 100 minutes in seconds
+            $scope.hederaInput = '';
+            $scope.miningRemainingTime = 0;
+            $scope.miningProgressStyle = {};
+            $scope.initialCccTokens = $scope.cccTokens; // Store initial for calculation
 
-        // Initialize the WebApp
-        function initWebApp() {
-            // Set up the main button
-            tg.MainButton.setText('MINE').show().enable();
-            tg.MainButton.onClick(handleMineClick);
+            // Initialize MainButton
+            const mainButton = WebApp.MainButton;
+            mainButton.text = "Close App";
+            mainButton.enable();
+            mainButton.show();
+            mainButton.onClick(() => WebApp.close());
 
-            // Request initial status
-            checkMiningStatus();
-        }
-
-        // Check if user is already mining
-        function checkMiningStatus() {
-            tg.sendData(JSON.stringify({
-                action: 'get_status'
-            }));
-        }
-
-        // Format time in seconds to MM:SS
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Update the progress circle
-        function updateProgress(percent) {
-            progressCircle.style.background = `conic-gradient(#00ff9d ${percent}%, #2d3748 ${percent}%)`;
-        }
-
-        // Start the countdown
-        function startCountdown(seconds) {
-            remainingSeconds = seconds;
-            mining = true;
-
-            // Disable the button
-            mineButton.disabled = true;
-            mineButton.textContent = 'MINING...';
-
-            // Update UI immediately
-            updateCountdownUI();
-
-            // Start the countdown interval
-            countdownInterval = setInterval(() => {
-                remainingSeconds--;
-                updateCountdownUI();
-
-                if (remainingSeconds <= 0) {
-                    clearInterval(countdownInterval);
-                    mining = false;
-                    mineButton.disabled = false;
-                    mineButton.textContent = 'MINE';
-                    timeRemainingElement.textContent = 'Ready to mine!';
-                    updateProgress(0);
+            $scope.linkHederaAccount = function() {
+                if ($scope.hederaInput) {
+                    const dataToSend = {
+                        action: "link_hedera",
+                        userId: $scope.userId,
+                        hederaAccountId: $scope.hederaInput
+                    };
+                    WebApp.sendData(JSON.stringify(dataToSend));
+                } else {
+                    alert("Please enter a Hedera Account ID.");
                 }
-            }, 1000);
-        }
+            };
 
-        // Update countdown UI
-        function updateCountdownUI() {
-            const percent = 100 - (remainingSeconds / (COOLDOWN_SECONDS / 100));
-            updateProgress(percent);
-            timeRemainingElement.textContent = `Next in: ${formatTime(remainingSeconds)}`;
-        }
+            $scope.startMining = function() {
+                const dataToSend = {
+                    action: "start_mining",
+                    userId: $scope.userId
+                };
+                WebApp.sendData(JSON.stringify(dataToSend));
+            };
 
-        // Handle mine button click
-        mineButton.addEventListener('click', () => {
-            const hederaAccount = hederaAccountInput.value.trim();
+            function updateMiningProgress() {
+                if ($scope.miningSessionStart) {
+                    const currentTime = Date.now() / 1000; // current time in seconds
+                    const elapsedTime = currentTime - $scope.miningSessionStart;
+                    $scope.miningRemainingTime = Math.max(0, $scope.miningDuration - elapsedTime);
 
-            // Basic validation
-            if (!hederaAccount || !/^0\.0\.\d+$/.test(hederaAccount)) {
-                statusMessage.textContent = 'Please enter a valid Hedera Account ID (format: 0.0.123456)';
-                statusMessage.style.color = '#ff6b6b';
-                return;
-            }
+                    if ($scope.miningRemainingTime <= 0) {
+                        // Mining session completed (or already was when loaded)
+                        $scope.miningSessionStart = null; // Clear session
+                        // The bot will update the balance when it processes the completion
+                        // For now, let's assume 1 CCC is added for completed session
+                        // A more robust solution might involve refreshing data from the bot
+                        // or having the bot send an update specifically for balance.
+                        // For simplicity, we'll increment locally for *this* session completion.
+                        // However, the *actual* source of truth is the bot.
+                        // This local increment for display is a temporary visual feedback.
 
-            // Show loading state
-            mineButton.disabled = true;
-            mineButton.textContent = 'PROCESSING...';
-            statusMessage.textContent = '';
-
-            // Send mining request to bot
-            tg.sendData(JSON.stringify({
-                action: 'start_mining',
-                hedera_account: hederaAccount
-            }));
-        });
-
-        // Handle incoming messages from the bot
-        function handleMessage(message) {
-            try {
-                const data = typeof message === 'string' ? JSON.parse(message) : message;
-
-                if (data.balance !== undefined) {
-                    // Update balance
-                    balanceElement.textContent = parseFloat(data.balance).toFixed(4);
-
-                    // Handle mining status
-                    if (data.is_mining) {
-                        startCountdown(data.time_remaining || COOLDOWN_SECONDS);
-                        accountInputContainer.classList.add('hidden');
+                        // To accurately reflect the balance, ideally, the bot should send the updated balance
+                        // after a session completion, and the web app would listen for it.
+                        // For this example, we'll just stop the visual.
+                        $scope.cccTokens = parseFloat(($scope.initialCccTokens + 1).toFixed(4)); // Update for display
+                        $interval.cancel($scope.miningInterval); // Stop the interval
                     } else {
-                        mineButton.disabled = false;
-                        mineButton.textContent = 'MINE';
-                        timeRemainingElement.textContent = 'Ready to mine!';
-                        updateProgress(0);
+                        const progress = (elapsedTime / $scope.miningDuration) * 100;
+                        const angle = progress * 3.6; // 360 degrees for 100%
+
+                        // Update CCC tokens dynamically based on elapsed time (for display only)
+                        const earnedDuringSession = (elapsedTime / $scope.miningDuration) * 1; // 1 CCC per session
+                        $scope.cccTokens = parseFloat(($scope.initialCccTokens + earnedDuringSession).toFixed(4));
+
+
+                        $scope.miningProgressStyle = {
+                            'background': `conic-gradient(#4CAF50 ${angle}deg, #eee ${angle}deg)`
+                        };
                     }
                 }
+            }
 
-                if (data.message) {
-                    // Show status message
-                    statusMessage.textContent = data.message;
-                    statusMessage.style.color = data.success ? '#00ff9d' : '#ff6b6b';
+            // Start updating progress if a session is active
+            if ($scope.miningSessionStart) {
+                // Adjust initial CCC balance for display if already in session
+                const currentTime = Date.now() / 1000;
+                const elapsedTimeAtLoad = currentTime - $scope.miningSessionStart;
+                const earnedAtLoad = (elapsedTimeAtLoad / $scope.miningDuration) * 1;
+                $scope.initialCccTokens = $scope.cccTokens - earnedAtLoad; // Adjust initial reference for calculation
+
+                $scope.miningInterval = $interval(updateMiningProgress, 1000); // Update every second
+                updateMiningProgress(); // Initial call
+            }
+
+            // Cleanup interval on scope destroy
+            $scope.$on('$destroy', function() {
+                if ($scope.miningInterval) {
+                    $interval.cancel($scope.miningInterval);
                 }
-
-            } catch (e) {
-                console.error('Error handling message:', e, message);
-                statusMessage.textContent = 'An error occurred. Please try again.';
-                statusMessage.style.color = '#ff6b6b';
-                mineButton.disabled = false;
-                mineButton.textContent = 'MINE';
-            }
-        }
-
-        // Handle WebApp data
-        tg.onEvent('web_app_data_received', (event) => {
-            if (event && event.data) {
-                handleMessage(event.data);
-            }
+            });
         });
-
-        // Handle main button click
-        function handleMineClick() {
-            const hederaAccount = hederaAccountInput.value.trim();
-
-            // Basic validation
-            if (!hederaAccount || !/^0\.0\.\d+$/.test(hederaAccount)) {
-                statusMessage.textContent = 'Please enter a valid Hedera Account ID (format: 0.0.123456)';
-                statusMessage.style.color = '#ff6b6b';
-                return;
-            }
-
-            // Show loading state
-            mineButton.disabled = true;
-            mineButton.textContent = 'PROCESSING...';
-            statusMessage.textContent = '';
-
-            // Send mining request to bot
-            tg.sendData(JSON.stringify({
-                action: 'start_mining',
-                hedera_account: hederaAccount
-            }));
-        }
-
-        // Initialize the WebApp when the page loads
-        document.addEventListener('DOMContentLoaded', initWebApp);
-
-        // Also initialize if the page is already loaded
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            initWebApp();
-        }
     </script>
+</head>
+<body ng-controller="CustomUIController">
+    <div class="container">
+        <h1>Welcome, {{username}}!</h1>
+
+        <p>Your CCC Balance: {{cccTokens.toFixed(4)}}</p>
+
+        <div ng-if="!hederaAccountId">
+            <h2>Link Your Hedera Account</h2>
+            <p>Enter your Hedera Account ID to unlock more features.</p>
+            <input type="text" ng-model="hederaInput" placeholder="e.g., 0.0.123456" />
+            <button ng-click="linkHederaAccount()">Link Hedera Account</button>
+        </div>
+
+        <div ng-if="hederaAccountId">
+            <h2>Your Hedera Account</h2>
+            <p><strong>Linked Account ID:</strong> {{hederaAccountId}}</p>
+
+            <h3>Mining Session</h3>
+            <div ng-if="!miningSessionStart">
+                <p>You currently have no active mining session.</p>
+                <button ng-click="startMining()">Start Mining Session</button>
+            </div>
+            <div ng-if="miningSessionStart">
+                <p class="mining-status-text">Mining in progress...</p>
+                <div class="mining-circle-container">
+                    <div class="mining-circle" ng-style="miningProgressStyle"></div>
+                    <div class="mining-balance">{{cccTokens.toFixed(4)}} CCC</div>
+                </div>
+                <p>Time remaining: {{miningRemainingTime | date:'mm:ss'}}</p>
+            </div>
+
+            <h3>MINING_SESSION Table</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Timestamp (Start Time)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{userId}}</td>
+                        <td>{{miningSessionStart * 1000 | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>
