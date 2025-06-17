@@ -1,203 +1,353 @@
-<html ng-app="custom-webapp-ui" lang="en" style="background-color: white">
-  <head>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCC Mining</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background-color: #f0f2f5;
-        color: #333;
-        margin: 0;
-      }
-      .container {
-        background-color: #fff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        max-width: 400px;
-        width: 90%;
-      }
-      h1 {
-        color: #007bff;
-        margin-bottom: 20px;
-      }
-      .balance {
-        font-size: 1.8em;
-        font-weight: bold;
-        color: #28a745;
-        margin-bottom: 25px;
-      }
-      .mine-button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        font-size: 1.5em;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.1s ease;
-        width: 100%;
-        max-width: 250px;
-      }
-      .mine-button:hover:enabled {
-        background-color: #0056b3;
-        transform: translateY(-2px);
-      }
-      .mine-button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-      }
-      .cooldown-info {
-        margin-top: 25px;
-        font-size: 1.1em;
-        color: #555;
-      }
-      .timer-circle-container {
-        position: relative;
-        width: 100px;
-        height: 100px;
-        margin: 20px auto;
-      }
-      .timer-circle {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 6px solid #e0e0e0; /* Light gray background for the circle */
-        position: relative;
-      }
-      .timer-circle-progress {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 6px solid transparent;
-        border-top-color: #007bff; /* Blue progress color */
-        transform: rotate(-45deg); /* Start from the top-right */
-        transition: transform linear; /* Smooth transition for rotation */
-        transform-origin: center;
-      }
-      .timer-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #007bff;
-      }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #00ff9d;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .mining-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+        }
+
+        .progress-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#00ff9d 0%, #00ff9d 0%, #2d3748 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background 0.5s ease;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.2);
+        }
+
+        .progress-inner {
+            width: 85%;
+            height: 85%;
+            background: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        .balance {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00ff9d;
+        }
+
+        .time-remaining {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .mining-button {
+            background: linear-gradient(45deg, #00ff9d, #00bcd4);
+            border: none;
+            color: #1a1a2e;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.3);
+            margin-top: 20px;
+        }
+
+        .mining-button:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .mining-button:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 255, 157, 0.4);
+        }
+
+        .mining-button:not(:disabled):active {
+            transform: translateY(1px);
+        }
+
+        .status-message {
+            margin-top: 20px;
+            min-height: 24px;
+            color: #ff6b6b;
+            font-size: 14px;
+        }
+
+        .account-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .account-input:focus {
+            outline: none;
+            border-color: #00ff9d;
+            box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
-    <script>
-      angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope, $interval) {
-        $scope.cccBalance = 0.0000;
-        $scope.canMine = false;
-        $scope.timeRemaining = 0; // in seconds
-        $scope.cooldownDuration = 100 * 60; // 100 minutes in seconds
-
-        const mainButton = window.Telegram.WebApp.MainButton;
-        mainButton.text = "Close WebApp";
-        mainButton.enable();
-        mainButton.show();
-        mainButton.onClick(function() {
-          window.Telegram.WebApp.close();
-        });
-
-        // Function to update the timer display
-        $scope.updateTimerDisplay = function() {
-          if ($scope.timeRemaining <= 0) {
-            $scope.canMine = true;
-            $scope.timerDisplay = "Ready to Mine!";
-            $scope.progressStyle = { 'transform': 'rotate(-45deg)' }; // Reset for full circle
-          } else {
-            $scope.canMine = false;
-            let minutes = Math.floor($scope.timeRemaining / 60);
-            let seconds = $scope.timeRemaining % 60;
-            $scope.timerDisplay = `${minutes}m ${seconds}s`;
-
-            // Calculate rotation for the progress circle
-            let progress = ($scope.cooldownDuration - $scope.timeRemaining) / $scope.cooldownDuration;
-            let rotationDegrees = (360 * progress) - 45; // -45 to start from top-right
-            $scope.progressStyle = { 'transform': `rotate(${rotationDegrees}deg)` };
-          }
-        };
-
-        // Function to request initial mining status and balance from the bot
-        $scope.getMiningStatus = function() {
-          window.Telegram.WebApp.sendData(JSON.stringify({ action: "get_mining_status" }));
-        };
-
-        // Function to handle mining
-        $scope.mineCCC = function() {
-          if ($scope.canMine) {
-            window.Telegram.WebApp.sendData(JSON.stringify({ action: "mine_ccc" }));
-          }
-        };
-
-        // Listen for data coming from the bot
-        window.Telegram.WebApp.onEvent('onReceivedData', function(event) {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.action === "update_mining_status") {
-              $scope.$apply(function() {
-                $scope.cccBalance = data.balance.toFixed(4);
-                $scope.timeRemaining = data.time_remaining;
-                $scope.canMine = data.can_mine;
-                $scope.cooldownDuration = data.cooldown_duration; // Ensure consistency
-                $scope.updateTimerDisplay();
-              });
-            } else if (data.action === "mining_result") {
-                // Handle mining result, e.g., show a toast message
-                window.Telegram.WebApp.showAlert(data.message);
-                $scope.$apply(function() {
-                    $scope.cccBalance = data.balance.toFixed(4);
-                    $scope.timeRemaining = data.time_remaining;
-                    $scope.canMine = data.can_mine;
-                    $scope.updateTimerDisplay();
-                });
-            }
-          } catch (e) {
-            console.error("Error parsing received data:", e);
-          }
-        });
-
-        // Initialize by getting the status
-        $scope.getMiningStatus();
-
-        // Update timer every second
-        $interval(function() {
-          if ($scope.timeRemaining > 0) {
-            $scope.timeRemaining--;
-            $scope.updateTimerDisplay();
-          } else if (!$scope.canMine) {
-            // Once timer hits 0, if not already minable, trigger status refresh
-            $scope.getMiningStatus();
-          }
-        }, 1000);
-      });
-    </script>
-  </head>
-  <body ng-controller="CustomUIController">
+</head>
+<body>
     <div class="container">
-      <h1>CCC Miner</h1>
-      <div class="balance">Balance: {{cccBalance}} CCC</div>
+        <h1>CCC Mining</h1>
 
-      <div class="timer-circle-container">
-        <div class="timer-circle">
-          <div class="timer-circle-progress" ng-style="progressStyle"></div>
-          <div class="timer-text">{{timerDisplay}}</div>
+        <div class="mining-container">
+            <div class="progress-circle" id="progressCircle">
+                <div class="progress-inner">
+                    <div class="balance" id="balance">0.0000</div>
+                    <div>CCC</div>
+                    <div class="time-remaining" id="timeRemaining">Ready to mine!</div>
+                </div>
+            </div>
         </div>
-      </div>
 
-      <button class="mine-button" ng-click="mineCCC()" ng-disabled="!canMine">Mine CCC</button>
+        <div id="accountInputContainer">
+            <input type="text"
+                   id="hederaAccount"
+                   class="account-input"
+                   placeholder="Enter your Hedera Account ID (0.0.123456)"
+                   pattern="0\.0\.\d{1,10}">
+        </div>
 
-      <div class="cooldown-info" ng-if="!canMine && timeRemaining > 0">
-        Next mine available in {{timeRemaining | date:'mm'}}m {{timeRemaining | date:'ss'}}s
-      </div>
+        <button id="mineButton" class="mining-button">MINE</button>
+
+        <div class="status-message" id="statusMessage"></div>
     </div>
-  </body>
+
+    <script>
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // DOM Elements
+        const mineButton = document.getElementById('mineButton');
+        const progressCircle = document.getElementById('progressCircle');
+        const balanceElement = document.getElementById('balance');
+        const timeRemainingElement = document.getElementById('timeRemaining');
+        const statusMessage = document.getElementById('statusMessage');
+        const hederaAccountInput = document.getElementById('hederaAccount');
+        const accountInputContainer = document.getElementById('accountInputContainer');
+
+        // State
+        let mining = false;
+        let countdownInterval = null;
+        let remainingSeconds = 0;
+        const COOLDOWN_SECONDS = 6000; // 100 minutes in seconds
+
+        // Initialize the WebApp
+        function initWebApp() {
+            // Set up the main button
+            tg.MainButton.setText('MINE').show().enable();
+            tg.MainButton.onClick(handleMineClick);
+
+            // Request initial status
+            checkMiningStatus();
+        }
+
+        // Check if user is already mining
+        function checkMiningStatus() {
+            tg.sendData(JSON.stringify({
+                action: 'get_status'
+            }));
+        }
+
+        // Format time in seconds to MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update the progress circle
+        function updateProgress(percent) {
+            progressCircle.style.background = `conic-gradient(#00ff9d ${percent}%, #2d3748 ${percent}%)`;
+        }
+
+        // Start the countdown
+        function startCountdown(seconds) {
+            remainingSeconds = seconds;
+            mining = true;
+
+            // Disable the button
+            mineButton.disabled = true;
+            mineButton.textContent = 'MINING...';
+
+            // Update UI immediately
+            updateCountdownUI();
+
+            // Start the countdown interval
+            countdownInterval = setInterval(() => {
+                remainingSeconds--;
+                updateCountdownUI();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    mining = false;
+                    mineButton.disabled = false;
+                    mineButton.textContent = 'MINE';
+                    timeRemainingElement.textContent = 'Ready to mine!';
+                    updateProgress(0);
+                }
+            }, 1000);
+        }
+
+        // Update countdown UI
+        function updateCountdownUI() {
+            const percent = 100 - (remainingSeconds / (COOLDOWN_SECONDS / 100));
+            updateProgress(percent);
+            timeRemainingElement.textContent = `Next in: ${formatTime(remainingSeconds)}`;
+        }
+
+        // Handle mine button click
+        mineButton.addEventListener('click', () => {
+            const hederaAccount = hederaAccountInput.value.trim();
+
+            // Basic validation
+            if (!hederaAccount || !/^0\.0\.\d+$/.test(hederaAccount)) {
+                statusMessage.textContent = 'Please enter a valid Hedera Account ID (format: 0.0.123456)';
+                statusMessage.style.color = '#ff6b6b';
+                return;
+            }
+
+            // Show loading state
+            mineButton.disabled = true;
+            mineButton.textContent = 'PROCESSING...';
+            statusMessage.textContent = '';
+
+            // Send mining request to bot
+            tg.sendData(JSON.stringify({
+                action: 'start_mining',
+                hedera_account: hederaAccount
+            }));
+        });
+
+        // Handle incoming messages from the bot
+        function handleMessage(message) {
+            try {
+                const data = typeof message === 'string' ? JSON.parse(message) : message;
+
+                if (data.balance !== undefined) {
+                    // Update balance
+                    balanceElement.textContent = parseFloat(data.balance).toFixed(4);
+
+                    // Handle mining status
+                    if (data.is_mining) {
+                        startCountdown(data.time_remaining || COOLDOWN_SECONDS);
+                        accountInputContainer.classList.add('hidden');
+                    } else {
+                        mineButton.disabled = false;
+                        mineButton.textContent = 'MINE';
+                        timeRemainingElement.textContent = 'Ready to mine!';
+                        updateProgress(0);
+                    }
+                }
+
+                if (data.message) {
+                    // Show status message
+                    statusMessage.textContent = data.message;
+                    statusMessage.style.color = data.success ? '#00ff9d' : '#ff6b6b';
+                }
+
+            } catch (e) {
+                console.error('Error handling message:', e, message);
+                statusMessage.textContent = 'An error occurred. Please try again.';
+                statusMessage.style.color = '#ff6b6b';
+                mineButton.disabled = false;
+                mineButton.textContent = 'MINE';
+            }
+        }
+
+        // Handle WebApp data
+        tg.onEvent('web_app_data_received', (event) => {
+            if (event && event.data) {
+                handleMessage(event.data);
+            }
+        });
+
+        // Handle main button click
+        function handleMineClick() {
+            const hederaAccount = hederaAccountInput.value.trim();
+
+            // Basic validation
+            if (!hederaAccount || !/^0\.0\.\d+$/.test(hederaAccount)) {
+                statusMessage.textContent = 'Please enter a valid Hedera Account ID (format: 0.0.123456)';
+                statusMessage.style.color = '#ff6b6b';
+                return;
+            }
+
+            // Show loading state
+            mineButton.disabled = true;
+            mineButton.textContent = 'PROCESSING...';
+            statusMessage.textContent = '';
+
+            // Send mining request to bot
+            tg.sendData(JSON.stringify({
+                action: 'start_mining',
+                hedera_account: hederaAccount
+            }));
+        }
+
+        // Initialize the WebApp when the page loads
+        document.addEventListener('DOMContentLoaded', initWebApp);
+
+        // Also initialize if the page is already loaded
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initWebApp();
+        }
+    </script>
+</body>
 </html>
