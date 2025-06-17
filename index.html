@@ -14,6 +14,11 @@
                 { name: "meat", value: 5 },
                 { name: "dairy", value: 5 }
             ];
+
+         // Function to send data
+        $scope.sendCurrentData = function() {
+          window.Telegram.WebApp.sendData(JSON.stringify($scope.foods));
+        };
         //initialize the button
         const mainButton = window.Telegram.WebApp.MainButton;
         mainButton.text = "Save Preferences";
@@ -24,6 +29,8 @@
           window.Telegram.WebApp.sendData(JSON.stringify($scope.foods));
         })
       });
+
+
     </script>
   </head>
   <body ng-controller="CustomUIController">
@@ -31,5 +38,9 @@
       <div style="width: 100px; display: inline-block">{{food.name}} : {{food.value}}</div>
       <input style="display: inline-block" type="range" min="1" max="10" ng-model="food.value" value="{{food.value}}">
     </div>
+
+    <button ng-click="sendCurrentData()" style="margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      Send Data Now
+    </button>
   </body>
 </html>
