@@ -1,236 +1,35 @@
 <html ng-app="custom-webapp-ui" lang="en" style="background-color: white">
-<head>
+  <head>
+    <!-- Load the Telegram Library -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!--Load the AngularJS Library-->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-    <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            background-color: #f9f9f9;
-        }
-        input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .mining-circle-container {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            margin: 20px auto;
-        }
-        .mining-circle {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 8px solid #eee;
-            border-top: 8px solid #4CAF50; /* Green for progress */
-            transform: rotate(-45deg); /* Start from top-left */
-            transition: border-top-color 0.5s ease-in-out;
-        }
-        .mining-balance {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            font-weight: bold;
-            color: #333;
-        }
-        .mining-status-text {
-            margin-top: 10px;
-            font-size: 1.1em;
-            color: #555;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
     <script>
-        angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope, $interval) {
-            const WebApp = window.Telegram.WebApp;
-            const urlParams = new URLSearchParams(window.location.search);
-            const initialData = JSON.parse(urlParams.get('data'));
-
-            $scope.userId = initialData.userId;
-            $scope.username = initialData.username;
-            $scope.hederaAccountId = initialData.hederaAccountId;
-            $scope.cccTokens = initialData.cccTokens;
-            $scope.miningSessionStart = initialData.miningSessionStart;
-            $scope.miningDuration = initialData.miningDuration; // 100 minutes in seconds
-
-            $scope.hederaInput = '';
-            $scope.miningRemainingTime = 0;
-            $scope.miningProgressStyle = {};
-            $scope.initialCccTokens = $scope.cccTokens; // Store initial for calculation
-
-            // Initialize MainButton
-            const mainButton = WebApp.MainButton;
-            mainButton.text = "Close App";
-            mainButton.enable();
-            mainButton.show();
-            mainButton.onClick(() => WebApp.close());
-
-            $scope.linkHederaAccount = function() {
-                if ($scope.hederaInput) {
-                    const dataToSend = {
-                        action: "link_hedera",
-                        userId: $scope.userId,
-                        hederaAccountId: $scope.hederaInput
-                    };
-                    WebApp.sendData(JSON.stringify(dataToSend));
-                } else {
-                    alert("Please enter a Hedera Account ID.");
-                }
-            };
-
-            $scope.startMining = function() {
-                const dataToSend = {
-                    action: "start_mining",
-                    userId: $scope.userId
-                };
-                WebApp.sendData(JSON.stringify(dataToSend));
-            };
-
-            function updateMiningProgress() {
-                if ($scope.miningSessionStart) {
-                    const currentTime = Date.now() / 1000; // current time in seconds
-                    const elapsedTime = currentTime - $scope.miningSessionStart;
-                    $scope.miningRemainingTime = Math.max(0, $scope.miningDuration - elapsedTime);
-
-                    if ($scope.miningRemainingTime <= 0) {
-                        // Mining session completed (or already was when loaded)
-                        $scope.miningSessionStart = null; // Clear session
-                        // The bot will update the balance when it processes the completion
-                        // For now, let's assume 1 CCC is added for completed session
-                        // A more robust solution might involve refreshing data from the bot
-                        // or having the bot send an update specifically for balance.
-                        // For simplicity, we'll increment locally for *this* session completion.
-                        // However, the *actual* source of truth is the bot.
-                        // This local increment for display is a temporary visual feedback.
-
-                        // To accurately reflect the balance, ideally, the bot should send the updated balance
-                        // after a session completion, and the web app would listen for it.
-                        // For this example, we'll just stop the visual.
-                        $scope.cccTokens = parseFloat(($scope.initialCccTokens + 1).toFixed(4)); // Update for display
-                        $interval.cancel($scope.miningInterval); // Stop the interval
-                    } else {
-                        const progress = (elapsedTime / $scope.miningDuration) * 100;
-                        const angle = progress * 3.6; // 360 degrees for 100%
-
-                        // Update CCC tokens dynamically based on elapsed time (for display only)
-                        const earnedDuringSession = (elapsedTime / $scope.miningDuration) * 1; // 1 CCC per session
-                        $scope.cccTokens = parseFloat(($scope.initialCccTokens + earnedDuringSession).toFixed(4));
-
-
-                        $scope.miningProgressStyle = {
-                            'background': `conic-gradient(#4CAF50 ${angle}deg, #eee ${angle}deg)`
-                        };
-                    }
-                }
-            }
-
-            // Start updating progress if a session is active
-            if ($scope.miningSessionStart) {
-                // Adjust initial CCC balance for display if already in session
-                const currentTime = Date.now() / 1000;
-                const elapsedTimeAtLoad = currentTime - $scope.miningSessionStart;
-                const earnedAtLoad = (elapsedTimeAtLoad / $scope.miningDuration) * 1;
-                $scope.initialCccTokens = $scope.cccTokens - earnedAtLoad; // Adjust initial reference for calculation
-
-                $scope.miningInterval = $interval(updateMiningProgress, 1000); // Update every second
-                updateMiningProgress(); // Initial call
-            }
-
-            // Cleanup interval on scope destroy
-            $scope.$on('$destroy', function() {
-                if ($scope.miningInterval) {
-                    $interval.cancel($scope.miningInterval);
-                }
-            });
-        });
+      //initialize the AngularJS stuff...
+      angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope) {
+        //init our slider values that we will display
+        $scope.foods = [
+                { name: "fruits", value: 5 },
+                { name: "vegetables", value: 5 },
+                { name: "meat", value: 5 },
+                { name: "dairy", value: 5 }
+            ];
+        //initialize the button
+        const mainButton = window.Telegram.WebApp.MainButton;
+        mainButton.text = "Save Preferences";
+        mainButton.enable();
+        mainButton.show();
+        // and make it send the "foods" object (as JSON string) back to the bot
+        mainButton.onClick(function(){
+          window.Telegram.WebApp.sendData(JSON.stringify($scope.foods));
+        })
+      });
     </script>
-</head>
-<body ng-controller="CustomUIController">
-    <div class="container">
-        <h1>Welcome, {{username}}!</h1>
-
-        <p>Your CCC Balance: {{cccTokens.toFixed(4)}}</p>
-
-        <div ng-if="!hederaAccountId">
-            <h2>Link Your Hedera Account</h2>
-            <p>Enter your Hedera Account ID to unlock more features.</p>
-            <input type="text" ng-model="hederaInput" placeholder="e.g., 0.0.123456" />
-            <button ng-click="linkHederaAccount()">Link Hedera Account</button>
-        </div>
-
-        <div ng-if="hederaAccountId">
-            <h2>Your Hedera Account</h2>
-            <p><strong>Linked Account ID:</strong> {{hederaAccountId}}</p>
-
-            <h3>Mining Session</h3>
-            <div ng-if="!miningSessionStart">
-                <p>You currently have no active mining session.</p>
-                <button ng-click="startMining()">Start Mining Session</button>
-            </div>
-            <div ng-if="miningSessionStart">
-                <p class="mining-status-text">Mining in progress...</p>
-                <div class="mining-circle-container">
-                    <div class="mining-circle" ng-style="miningProgressStyle"></div>
-                    <div class="mining-balance">{{cccTokens.toFixed(4)}} CCC</div>
-                </div>
-                <p>Time remaining: {{miningRemainingTime | date:'mm:ss'}}</p>
-            </div>
-
-            <h3>MINING_SESSION Table</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Timestamp (Start Time)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>{{userId}}</td>
-                        <td>{{miningSessionStart * 1000 | date:'yyyy-MM-dd HH:mm:ss'}}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+  </head>
+  <body ng-controller="CustomUIController">
+    <div ng-repeat="food in foods">
+      <div style="width: 100px; display: inline-block">{{food.name}} : {{food.value}}</div>
+      <input style="display: inline-block" type="range" min="1" max="10" ng-model="food.value" value="{{food.value}}">
     </div>
-</body>
+  </body>
 </html>
